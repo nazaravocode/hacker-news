@@ -41,23 +41,30 @@ class App extends Component {
         this.onSearchChange = this.onSearchChange.bind(this);
     }
 
-    setSearchTopStories(result) {
-        console.log('setSearchTopStories ', result);
-        this.setState({hits: result,  isLoading: false});
-       /*setTimeout(() => this.setState({result,  isLoading: false}), 3000);*/
-        console.log('setSearchTopStories ', this.state.result);
+    setSearchTopStories(hits) {
+        this.setState({hits,  isLoading: false});
     }
 
-    componentDidMount() {
+  async  componentDidMount() {
         this.setState({ isLoading: true });
         const {searchTerm} = this.state;
-        console.log('${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}', `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`);
-        axios.get(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`)
-            .then(result => this.setSearchTopStories(result.data.hits))
-            .catch(error => this.setState({
-                error,
-                isLoading: false
-            }));
+     try {
+       const result = await axios.get(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`);
+         this.setSearchTopStories(result.data.hits);
+      
+     }
+     catch (error) {
+         this.setState({
+             error,
+             loading : false
+         })
+     }
+/*axios.get(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`)
+    .then(result => this.setSearchTopStories(result.data.hits))
+    .catch(error => this.setState({
+        error,
+        isLoading: false
+    }));*/
     }
 
     onDismiss(id) {
