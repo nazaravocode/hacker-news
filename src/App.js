@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import './App.css';
+import axios from 'axios';
 import Clock from './Clock';
 
 const DEFAULT_QUERY = 'redux';
@@ -28,8 +29,11 @@ class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            result: null,
+            hits: null,
             searchTerm: DEFAULT_QUERY,
+            isLoading: false,
+            error: null,
+
         };
         console.log('url', url);
         this.setSearchTopStories = this.setSearchTopStories.bind(this);
@@ -38,24 +42,22 @@ class App extends Component {
     }
 
     setSearchTopStories(result) {
-        this.setState({result});
+        console.log('setSearchTopStories ', result);
+        this.setState({hits: result,  isLoading: false});
+       /*setTimeout(() => this.setState({result,  isLoading: false}), 3000);*/
         console.log('setSearchTopStories ', this.state.result);
     }
 
     componentDidMount() {
+        this.setState({ isLoading: true });
         const {searchTerm} = this.state;
         console.log('${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}', `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`);
-        fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`)
-            //.then(response => response.json())
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    throw new Error('Something went wrong ...');
-                }
-            })
-            .then(result => this.setSearchTopStories(result))
-            .catch(error => error);
+        axios.get(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`)
+            .then(result => this.setSearchTopStories(result.data.hits))
+            .catch(error => this.setState({
+                error,
+                isLoading: false
+            }));
     }
 
     onDismiss(id) {
@@ -75,10 +77,15 @@ class App extends Component {
     }
 
     render() {
-        const {searchTerm, result} = this.state;
-        if (!result) {
-            return null;
+        const {searchTerm, hits, isLoading, error} = this.state;
+        if (error) {
+            return <p>{error.message}</p>;
         }
+
+        if (isLoading) {
+            return <p>Loading ...</p>;
+        }
+
         return (
             <div className="page">
                 <div className="interactions">
@@ -90,7 +97,7 @@ class App extends Component {
                     </Search>
                 </div>
                 <Table
-                    list={result.hits}
+                    list={hits}
                     pattern={searchTerm}
                     onDismiss={this.onDismiss}
                 />
